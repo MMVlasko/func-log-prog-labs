@@ -69,12 +69,14 @@ pass(Group, Student, Pass) :-
     structers_to_grades(Grades, L), 
     (my_member(2, L) -> Pass = false ; Pass = true).
 
-% получение среднего арифмитического оценок и информации о наличии несданных экзаменов данного студента данной группы
+% получение среднего арифмитического оценок и информации о наличии 
+% несданных экзаменов данного студента данной группы
 student_info(Group, Student, Middle, Pass) :- 
-    pass(Group, Student, Pass).
-    middle(L, Middle) % 1
+    pass(Group, Student, Pass),
+    middle(L, Middle). % 1
 
 
+% получение количества вхождений данного элемента в данный список
 count(Elem, [], 0).
 count(Elem, [Elem | T], Res) :-
      count(Elem, T, TRes), 
@@ -82,40 +84,49 @@ count(Elem, [Elem | T], Res) :-
 count(Elem, [H | T], Res) :- 
     count(Elem, T, Res).
 
+% получение оценки Grade по данному предмету Subj из списка элементов вида grade(Subj, Grade)
 get_grade(Subj, [grade(Subj, Grade) | _], Grade).
 get_grade(Subj, [H | T], Grade) :- 
     get_grade(Subj, T, Grade).
 
+% получение списка оценок всех студентов по данному предмету
 grades_by_subject(Subj, RGrades) :- 
     findall(Grade, (student(_, _, Grades), get_grade(Subj, Grades, Grade)), RGrades).
 
+% получение количество несдавших по данному предмету
 not_pass_count(SubjName, Count) :- 
     subject(Subj, SubjName), 
     grades_by_subject(SCode, Grades), 
     count(2, Grades, Count). % 2
 
 
+% проверка того, что данный элемент больше или равен любого элемента данного списка
 more_than_everybody_in_list(X, []).
 more_than_everybody_in_list(X, [H | T]) :- 
     X >= H, 
     more_than_everybody_in_list(X, T).
 
+% получение максимального элемента данного списка
 max_of_list(L, X) :- 
     my_member(X, L), 
     more_than_everybody_in_list(X, L).
 
+% получение средней оценки у данного студента данной группы
 get_middle(Group, Student, Middle) :- 
     student(Group, Student, SGrades), 
     structers_to_grades(SGrades, Grades), 
     middle(Grades, Middle).
 
+% получение списка средних оценок студентов данной группы
 get_middles(Group, Middles) :- 
     findall(Middle, get_middle(Group, _, Middle), Middles).
 
+% получение очередного студента с максимальной средней оценкой у данной группы
 max_middle_student(Group, Student) :- 
     get_middles(Group, Middles), 
     max_of_list(Middles, Max), 
     get_middle(Group, Student, Max).
 
+% получение списка всех студентов с максимальной средней оценкой у данной группы
 max_middle(Group, Students) :- 
     findall(Student, max_middle_student(Group, Student), Students). % 3
