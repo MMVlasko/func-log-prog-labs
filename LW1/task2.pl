@@ -5,7 +5,7 @@ subject('INF','Информатика').
 subject('ENG','Английский язык').
 subject('PSY','Психология').
 
-student(102,'Petrov',[grade('LP',3),grade('MTH',4),grade('FP',4),grade('INF',4),grade('ENG',5),grade('PSY',4)]).
+student(102,'Петров',[grade('LP',3),grade('MTH',4),grade('FP',4),grade('INF',4),grade('ENG',5),grade('PSY',4)]).
 student(101,'Петровский',[grade('LP',5),grade('MTH',4),grade('FP',3),grade('INF',4),grade('ENG',2),grade('PSY',4)]).
 student(104,'Иванов',[grade('LP',4),grade('MTH',5),grade('FP',5),grade('INF',4),grade('ENG',3),grade('PSY',3)]).
 student(102,'Ивановский',[grade('LP',3),grade('MTH',4),grade('FP',3),grade('INF',3),grade('ENG',3),grade('PSY',5)]).
@@ -96,7 +96,7 @@ grades_by_subject(Subj, RGrades) :-
 % получение количество несдавших по данному предмету
 not_pass_count(SubjName, Count) :- 
     subject(Subj, SubjName), 
-    grades_by_subject(SCode, Grades), 
+    grades_by_subject(Subj, Grades), 
     count(2, Grades, Count). % 2
 
 
