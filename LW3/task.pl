@@ -1,41 +1,32 @@
 move(state([X | L], C, R), state(L, [X | C], R)).
-move(state([X | L], C, R), state(L, C, [X | R])).
-move(state(L, [X | C], R), state(L, C, [X | R])).
+
+move(state([X | L], C, []), state(L, C, [X])).
+move(state(L, [X | C], []), state(L, C, [X])).
+
+move(state([X | L], C, [Y | R]), state(L, C, [X, Y | R])) :- not(X = Y).
+move(state(L, [X | C], [Y | R]), state(L, C, [X, Y | R])) :- not(X = Y).
 
 prolong([X | T], [Y, X | T]) :- 
     move(X, Y), 
     not(member(Y, T)).
 
-dfs(Start, End, Res) :- dfsx([Start], End, Res).
+dfs(state(L, C, R), Res) :- 
+    length(L, Len),
+    dfsx([state(L, C, R)], Res, Len).
 
-dfsx([End | T], End, [End | T]).
-dfsx(P, E, Res) :-
+dfsx([state([], [], A) | T], [state([], [], A) | T], Len) :- 
+    length(A, Len).
+dfsx(P, Res, Len) :-
     prolong(P, P1),
-    dfsx(P1, E, Res).
+    dfsx(P1, Res, Len).
 
-bfs(Start, End, Res) :- bfsx([[Start]], End, Res).
+ws(Start, End, Res) :- 
+    wsx([[Start]], End, Res).
 
-bfsx([[End | T] | _], End, [End | T]).
-bfsx([Path | QT], End, Res) :-
+wsx([[End | T] | _], End, [End | T]).
+wsx([Path | QT], End, Res) :-
     findall(X, prolong(Path, X), Paths),
     append(QT, Paths, OQ),
-    bfsx(OQ, End, Res).
-    
+    wsx(OQ, End, Res).
 
-generate_w(0, []).
-generate_w(Len, [w, b | T]) :-
-    Len > 0,
-    Len1 is Len - 2,
-    length(T, Len1),
-    generate_w(Len1, T).
-
-generate_b(0, []).
-generate_b(Len, [b, w | T]) :-
-    Len > 0,
-    Len1 is Len - 2,
-    length(T, Len1),
-    generate_b(Len1, T).
-
-generate(L, R) :- generate_b(L, R); generate_w(L, R).
-
-solve(Left, Res) :- length(Left, Len), generate(Len, Right), bfs(state(Left, [], []), state([], [], Right), Res).
+solve(Left, Res) :- dfs(state(Left, [], []), Res).
