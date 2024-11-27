@@ -35,6 +35,10 @@ solution(X) :-
     single([ABuy, BBuy, CBuy, DBuy]),
     spec(AWrite), spec(BWrite), spec(CWrite), spec(DWrite), 
     single([AWrite, BWrite, CWrite, DWrite]),
+
+    % никто не покупал и не читает свою книгу
+    not(my_member([_, _, Buy, Buy], X)),
+    not(my_member([_, Read, _, Read], X)),
     
     % поэт не читает пьесу
     my_member([_, 'дрматургия', _, 'поэзия'], X),
@@ -47,10 +51,6 @@ solution(X) :-
     
     % и не покупал ?
     % not(my_member([_, _, 'астрономия', 'проза'], X)),
-
-    % никто не покупал и не читает свою книгу
-    not(my_member([_, _, Buy, Buy], X)),
-    not(my_member([_, Read, _, Read], X)),
 
     % Алексеев и Борисов обменялись книгами
     my_member(['Алексеев', BorisBuy, AlexBuy, _], X),
