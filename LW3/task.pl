@@ -54,9 +54,9 @@ nature(N) :-
     nature(M),
     N is M + 1.
 
-srch_id(Start, Res) :-
+srch_id(Start, Res, MLen) :-
     nature(DL),
-    (DL < 5 -> true; !),
+    (DL < MLen + 1 -> true; !),
     dfs_id(Start, Res, DL).
 
 
@@ -65,7 +65,7 @@ solve(Left, Res, Met) :-
         Met == d -> dfs(state(Left, [], []), Res); 
         (
             Met == w -> ws(state(Left, [], []), Res);
-            srch_id(state(Left, [], []), Res)
+            length(Left, Len), MLen is 3 * Len + 1, srch_id(state(Left, [], []), Res, MLen)
         )
     ).
 
@@ -102,3 +102,19 @@ write_solutions([H | T]) :-
 solve(Left, Met) :-
     findall(X, solve(Left, X, Met), Res),
     write_solutions(Res), !.
+
+generate_wb([], 0) :- !.
+generate_wb([A, B | T], N) :-
+    A = w, B = b, N1 is N - 2, generate_wb(T, N1).
+
+chrono(Length) :-
+    0 is Length mod 2,
+    generate_wb(Left1, Length),
+    generate_wb(Left2, Length),
+    generate_wb(Left3, Length),
+    write('Поиск в глубину:'), nl,
+    time(findall(R1, solve(Left1, R1, d), _)),
+    write('Поиск в ширину:'), nl,
+    time(findall(R2, solve(Left2, R2, w), _)),
+    write('Поиск в глубину с итеративным погружением:'), nl,
+    time(findall(R2, solve(Left3, R2, x), _)).
