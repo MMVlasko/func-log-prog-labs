@@ -16,51 +16,47 @@ prolong([X | T], [Y, X | T]) :-
 
 
 % обёртка над поиском в глубину, определяющая данное кол-во вагонов
-dfs(state(L, C, R), Res, All) :- 
-    length(L, Len),
-    dfsx([state(L, C, R)], Res, Len, All).
+dfs(state(L, C, R), Res, All) :-
+    dfsx([state(L, C, R)], Res, All).
 
 % поиск в глубину заканчивается, когда все вагоны оказываются справа
 % при поиске кратчайшего - остановка после нахождения первого решения длины 3 * n
-dfsx([state([], [], A) | T], [state([], [], A) | T], Len, All) :- 
-    length(A, Len), 
-    (All == all; length([state([], [], A) | T], Ln), Ln is 3 * (Len / 2), !).
-dfsx(P, Res, Len, All) :-
+dfsx([state([], [], A) | T], [state([], [], A) | T], All) :-
+    (All == all; length([state([], [], A) | T], Ln), length(A, Len), Ln is 3 * (Len / 2), !).
+dfsx(P, Res, All) :-
     prolong(P, P1),
-    dfsx(P1, Res, Len, All).
+    dfsx(P1, Res, All).
 
 
 % обёртка над поиском в ширину, определяющая данное кол-во вагонов
-bfs(state(L, C, R), Res, All) :- 
-    length(L, Len),
-    bfsx([[state(L, C, R)]], Res, Len, All).
+bfs(state(L, C, R), Res, All) :-
+    bfsx([[state(L, C, R)]], Res, All).
 
 % поиск в ширину заканчивается, когда все вагоны оказываются справа
 % при поиске кратчайшего - остановка после нахождения первого решения
-bfsx([[state([], [], A) | T] | _], [state([], [], A) | T], Len, All) :-
-    length(A, Len), (All == all -> true; !).
-bfsx([Path | QT], Res, Len, All) :-
+bfsx([[state([], [], A) | T] | _], [state([], [], A) | T], All) :-
+    (All == all -> true; !).
+bfsx([Path | QT], Res, All) :-
     findall(X, prolong(Path, X), Paths),
     append(QT, Paths, OQ), !,
-    bfsx(OQ, Res, Len, All).
-bfsx([_ | QT], Res, Len, All) :-
-    bfsx(QT, Res, Len, All).
+    bfsx(OQ, Res, All).
+bfsx([_ | QT], Res, All) :-
+    bfsx(QT, Res, All).
 
 
 % обёртка над поиском в глубину для данного предела глубины
 dfs_id(state(L, C, R), Res, DL, All) :-
-    length(L, Len),
-    dfsx_id([state(L, C, R)], Res, Len, DL, All).
+    dfsx_id([state(L, C, R)], Res, DL, All).
 
 % поиск в глубину для данного предела глубины
 % при поиске кратчайшего - остановка после нахождения первого решения
-dfsx_id([state([], [], A) | T], [state([], [], A) | T], Len, _, All) :-
-    length(A, Len), (All == all -> true; !).
-dfsx_id(Path, Res, Len, DL, All) :-
+dfsx_id([state([], [], A) | T], [state([], [], A) | T], _, All) :-
+    (All == all -> true; !).
+dfsx_id(Path, Res, DL, All) :-
     DL > 0,
     prolong(Path, NewPath),
     NewDL is DL - 1,
-    dfsx_id(NewPath, Res, Len, NewDL, All).
+    dfsx_id(NewPath, Res, NewDL, All).
 
 % генератор натуральных чисел
 nature(1).
@@ -103,36 +99,6 @@ astar([node(State, Path, G, _) | RestQueue], FinalPath, All) :-
     sort(4, @=<, NewQueue, SortedQueue), % Сортируем по F
     astar(SortedQueue, FinalPath, All).
 
-
-% Основной предикат solve_idastar
-solve_idastar(InitialState, Path) :-
-    heuristic(InitialState, H),
-    idastar(InitialState, H, Path).
-
-% Основная логика IDA*
-idastar(State, Threshold, Path) :-
-    idastar_search([node(State, [], 0, Threshold)], Threshold, Path).
-
-% Завершение поиска, если состояние достигло цели
-idastar_search([node(state([], [], R), Path, _, _) | _], _, [state([], [], R) | Path]).
-
-% Основной рекурсивный шаг IDA*
-idastar_search([node(State, Path, G, F) | RestQueue], Threshold, FinalPath) :-
-    F =< Threshold,
-    findall(node(NextState, [State | Path], GNew, FNew),
-            (move(State, NextState),
-             \+ member(NextState, Path),
-             GNew is G + 1,
-             heuristic(NextState, H),
-             FNew is GNew + H),
-            Successors),
-    append(RestQueue, Successors, NewQueue),
-    idastar_search(NewQueue, Threshold, FinalPath).
-
-% Увеличение порога, если не нашли решение
-idastar_search(_, Threshold, Path) :-
-    Threshold1 is Threshold + 1,
-    idastar_search([node(_, [], 0, Threshold1)], Threshold1, Path).
 
 solve_greedy(InitialState, Path, All) :-
     heuristic(InitialState, H),
@@ -212,7 +178,7 @@ write_solutions([H | T]) :-
 
 % основной предикат решения
 solve(Left, Met, All) :-
-    findall(X, solve(Left, X, Met, All), Res),
+    setof(X, solve(Left, X, Met, All), Res),
     length(Res, L), L > 0,
     write_solutions(Res), !.
 
@@ -224,8 +190,8 @@ generate_wb([A, B | T], N) :-
     N1 is N - 2, 
     generate_wb(T, N1).
 
-% хронометрировние поисков всех решений разными методами для данного числа вагонов
-chrono_all(Length, DL) :-
+% хронометрировние поисков разными методами для данного числа вагонов
+chrono(Length, DL, All) :-
     0 is Length mod 2,
     generate_wb(Left1, Length),
     generate_wb(Left2, Length),
@@ -233,49 +199,21 @@ chrono_all(Length, DL) :-
 
     write('Поиск в глубину (все пути): '),
     get_time(Start),
-    findall(R1, solve(Left1, R1, d, all), _),
+    findall(R1, solve(Left1, R1, d, All), _),
     get_time(End),
     Re is End - Start,
     write(Re), nl,
 
     write('Поиск в ширину (все пути): '),
     get_time(Start1),
-    findall(R1, solve(Left2, R2, w, all), _),
+    findall(R1, solve(Left2, R2, w, All), _),
     get_time(End1),
     Re1 is End1 - Start1,
     write(Re1), nl,
 
     write('Поиск в глубину с итеративным погружением (все пути): '),
     get_time(Start2),
-    findall(R1, solve(Left3, R2, DL, all), _),
-    get_time(End2),
-    Re2 is End2 - Start2,
-    write(Re2), nl.
-
-% хронометрировние поисков кратчайшего пути разными методами для данного числа вагонов
-chrono_short(Length, DL) :-
-    0 is Length mod 2,
-    generate_wb(Left1, Length),
-    generate_wb(Left2, Length),
-    generate_wb(Left3, Length),
-
-    write('Поиск в глубину (кратчайший путь): '),
-    get_time(Start),
-    findall(R1, solve(Left1, R1, d, short), _),
-    get_time(End),
-    Re is End - Start,
-    write(Re), nl,
-
-    write('Поиск в ширину (кратчайший путь): '),
-    get_time(Start1),
-    findall(R1, solve(Left2, R2, w, short), _),
-    get_time(End1),
-    Re1 is End1 - Start1,
-    write(Re1), nl,
-
-    write('Поиск в глубину с итеративным погружением (кратчайший путь): '),
-    get_time(Start2),
-    findall(R1, solve(Left3, R2, DL, short), _),
+    findall(R1, solve(Left3, R2, DL, All), _),
     get_time(End2),
     Re2 is End2 - Start2,
     write(Re2), nl.
